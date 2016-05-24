@@ -69,7 +69,7 @@ class HaproxyAmphoraLoadBalancerDriver(
         # Generate HaProxy configuration from listener object
         config = self.jinja.build_config(listener, certs['tls_cert'])
 
-        for amp in listener.load_balancer.amphorae:
+        for amp in listener.load_balancer.backend_amphorae:
             if amp.status != constants.DELETED:
                 self.client.upload_config(amp, listener.id, config)
                 # todo (german): add a method to REST interface to reload or
@@ -112,7 +112,7 @@ class HaproxyAmphoraLoadBalancerDriver(
         pass
 
     def post_vip_plug(self, load_balancer, amphorae_network_config):
-        for amp in load_balancer.amphorae:
+        for amp in load_balancer.all_frontend_amphorae:
             if amp.status != constants.DELETED:
                 subnet = amphorae_network_config.get(amp.id).vip_subnet
                 # NOTE(blogan): using the vrrp port here because that

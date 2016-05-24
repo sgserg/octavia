@@ -46,7 +46,7 @@ class LoadBalancerFlows(object):
         self.pool_flows = pool_flows.PoolFlows()
         self.member_flows = member_flows.MemberFlows()
 
-    def get_create_load_balancer_flow(self, topology):
+    def get_create_load_balancer_flow(self, load_balancer):
         """Creates a conditional graph flow that allocates a loadbalancer to
 
         two spare amphorae.
@@ -60,7 +60,7 @@ class LoadBalancerFlows(object):
         f_name = constants.CREATE_LOADBALANCER_FLOW
         lb_create_flow = unordered_flow.Flow(f_name)
 
-        if topology == constants.TOPOLOGY_ACTIVE_STANDBY:
+        if load_balancer.topology == constants.TOPOLOGY_ACTIVE_STANDBY:
             # When we boot up amphora for an active/standby topology,
             # we should leverage the Nova anti-affinity capabilities
             # to place the amphora on different hosts, also we need to check
@@ -91,25 +91,25 @@ class LoadBalancerFlows(object):
 
             lb_create_flow.add(master_amp_sf, backup_amp_sf)
 
-        elif topology == constants.TOPOLOGY_SINGLE:
+        elif load_balancer.topology == constants.TOPOLOGY_SINGLE:
             amphora_sf = self.amp_flows.get_amphora_for_lb_subflow(
                 prefix=constants.ROLE_STANDALONE,
                 role=constants.ROLE_STANDALONE)
             lb_create_flow.add(amphora_sf)
         else:
             LOG.error(_LE("Unknown topology: %s.  Unable to build load "
-                          "balancer."), topology)
-            raise exceptions.InvalidTopology(topology=topology)
+                          "balancer."), load_balancer.topology)
+            raise exceptions.InvalidTopology(topology=load_balancer.topology)
 
         create_lb_flow_wrapper.add(lb_create_flow)
         return create_lb_flow_wrapper
 
-    def get_create_load_balancer_graph_flows(self, topology, prefix):
-        allocate_amphorae_flow = self.get_create_load_balancer_flow(topology)
+    def get_create_load_balancer_graph_flows(self, load_balancer, prefix):
+        allocate_amphorae_flow = self.get_create_load_balancer_flow(load_balancer)
         f_name = constants.CREATE_LOADBALANCER_GRAPH_FLOW
         lb_create_graph_flow = linear_flow.Flow(f_name)
         lb_create_graph_flow.add(
-            self.get_post_lb_amp_association_flow(prefix, topology)
+            self.get_post_lb_amp_association_flow(prefix, load_balancer)
         )
         lb_create_graph_flow.add(
             database_tasks.ReloadLoadBalancer(
@@ -143,7 +143,7 @@ class LoadBalancerFlows(object):
         )
         return allocate_amphorae_flow, lb_create_graph_flow
 
-    def get_post_lb_amp_association_flow(self, prefix, topology):
+    def get_post_lb_amp_association_flow(self, prefix, load_balancer):
         """Reload the loadbalancer and create networking subflows for
 
         created/allocated amphorae.
@@ -167,7 +167,7 @@ class LoadBalancerFlows(object):
         new_LB_net_subflow = self.get_new_LB_networking_subflow()
         post_create_LB_flow.add(new_LB_net_subflow)
 
-        if topology == constants.TOPOLOGY_ACTIVE_STANDBY:
+        if load_balancer.hasVRRP:
             vrrp_subflow = self.amp_flows.get_vrrp_subflow(prefix)
             post_create_LB_flow.add(vrrp_subflow)
 

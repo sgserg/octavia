@@ -110,10 +110,7 @@ class CalculateDelta(BaseNetworkTask):
 
         calculate_amp = CalculateAmphoraDelta()
         deltas = {}
-        for amphora in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-
+        for amphora in loadbalancer.backend_amphorae:
             delta = calculate_amp.execute(loadbalancer, amphora)
             deltas[amphora.id] = delta
         return deltas
@@ -363,7 +360,7 @@ class GetAmphoraeNetworkConfigs(BaseNetworkTask):
         vip_subnet = self.network_driver.get_subnet(loadbalancer.vip.subnet_id)
         vip_port = self.network_driver.get_port(loadbalancer.vip.port_id)
         amp_net_configs = {}
-        for amp in loadbalancer.amphorae:
+        for amp in loadbalancer.all_frontend_amphorae:
             if amp.status != constants.DELETED:
                 LOG.debug("Retrieving network details for amphora %s", amp.id)
                 vrrp_port = self.network_driver.get_port(amp.vrrp_port_id)

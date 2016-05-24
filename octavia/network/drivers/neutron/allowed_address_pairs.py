@@ -146,8 +146,7 @@ class AllowedAddressPairsDriver(neutron_base.BaseNeutronDriver):
 
         # Currently we are using the VIP network for VRRP
         # so we need to open up the protocols for it
-        if (CONF.controller_worker.loadbalancer_topology ==
-                constants.TOPOLOGY_ACTIVE_STANDBY):
+        if load_balancer.hasVRRP:
             try:
                 self._create_security_group_rule(
                     sec_grp_id,
@@ -267,9 +266,7 @@ class AllowedAddressPairsDriver(neutron_base.BaseNeutronDriver):
             self._update_vip_security_group(load_balancer, vip)
         plugged_amphorae = []
         subnet = self.get_subnet(vip.subnet_id)
-        for amphora in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                load_balancer.amphorae):
+        for amphora in load_balancer.frontend_amphorae:
 
             interface = self._get_plugged_interface(amphora.compute_id,
                                                     subnet.network_id)
@@ -332,9 +329,8 @@ class AllowedAddressPairsDriver(neutron_base.BaseNeutronDriver):
             msg = ("Can't unplug vip because vip subnet {0} was not "
                    "found").format(vip.subnet_id)
             raise base.PluggedVIPNotFound(msg)
-        for amphora in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                load_balancer.amphorae):
+
+        for amphora in load_balancer.frontend_amphorae:
 
             interface = self._get_plugged_interface(amphora.compute_id,
                                                     subnet.network_id)

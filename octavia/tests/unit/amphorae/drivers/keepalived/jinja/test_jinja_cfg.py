@@ -44,7 +44,7 @@ class TestVRRPRestDriver(base.TestCase):
         self.amphora2.vrrp_priority = 90
 
         self.lb = mock.MagicMock()
-        self.lb.amphorae = [self.amphora1, self.amphora2]
+        self.lb.vrrp_amphorae = [self.amphora1, self.amphora2]
         self.lb.vrrp_group.vrrp_group_name = 'TESTGROUP'
         self.lb.vrrp_group.vrrp_auth_type = constants.VRRP_AUTH_DEFAULT
         self.lb.vrrp_group.vrrp_auth_pass = 'TESTPASSWORD'

@@ -67,9 +67,7 @@ class KeepalivedJinjaTemplater(object):
         # several backend services. To disable the fallback behavior, we need
         #  to add the "nopreempt" flag in the backup instance section.
         peers_ips = []
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
+        for amp in loadbalancer.vrrp_amphorae:
             if amp.vrrp_ip != amphora.vrrp_ip:
                 peers_ips.append(amp.vrrp_ip)
         return self.get_template(self.keepalived_template).render(

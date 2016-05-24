@@ -41,9 +41,7 @@ class KeepalivedAmphoraDriverMixin(driver_base.VRRPDriverMixin):
         LOG.debug("Update loadbalancer %s amphora VRRP configuration.",
                   loadbalancer.id)
 
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
+        for amp in loadbalancer.vrrp_amphorae:
             # Generate Keepalived configuration from loadbalancer object
             config = templater.build_keepalived_config(loadbalancer, amp)
             self.client.upload_vrrp_config(amp, config)
@@ -56,10 +54,7 @@ class KeepalivedAmphoraDriverMixin(driver_base.VRRPDriverMixin):
         LOG.info(_LI("Stop loadbalancer %s amphora VRRP Service."),
                  loadbalancer.id)
 
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-
+        for amp in loadbalancer.vrrp_amphorae:
             self.client.stop_vrrp(amp)
 
     def start_vrrp_service(self, loadbalancer):
@@ -70,10 +65,7 @@ class KeepalivedAmphoraDriverMixin(driver_base.VRRPDriverMixin):
         LOG.info(_LI("Start loadbalancer %s amphora VRRP Service."),
                  loadbalancer.id)
 
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-
+        for amp in loadbalancer.vrrp_amphorae:
             LOG.debug("Start VRRP Service on amphora %s .", amp.lb_network_ip)
             self.client.start_vrrp(amp)
 
@@ -85,8 +77,5 @@ class KeepalivedAmphoraDriverMixin(driver_base.VRRPDriverMixin):
         LOG.info(_LI("Reload loadbalancer %s amphora VRRP Service."),
                  loadbalancer.id)
 
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-
+        for amp in loadbalancer.vrrp_amphorae:
             self.client.reload_vrrp(amp)

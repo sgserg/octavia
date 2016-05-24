@@ -86,7 +86,7 @@ class TestNetworkTasks(base.TestCase):
         self.assertEqual(EMPTY, net.execute(self.load_balancer_mock))
 
         self.amphora_mock.load_balancer = self.load_balancer_mock
-        self.load_balancer_mock.amphorae = [self.amphora_mock]
+        self.load_balancer_mock.backend_amphorae = [self.amphora_mock]
         self.load_balancer_mock.listeners = None
         self.assertEqual({self.amphora_mock.id: None},
                          net.execute(self.load_balancer_mock))
@@ -407,7 +407,7 @@ class TestNetworkTasks(base.TestCase):
 
         mock_driver.reset_mock()
         self.amphora_mock.status = constants.DELETED
-        self.load_balancer_mock.amphorae = [self.amphora_mock]
+        self.load_balancer_mock.all_frontend_amphorae = [self.amphora_mock]
         net_task = network_tasks.GetAmphoraeNetworkConfigs()
         configs = net_task.execute(self.load_balancer_mock)
         self.assertEqual({}, configs)

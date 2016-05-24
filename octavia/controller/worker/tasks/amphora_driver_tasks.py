@@ -203,7 +203,7 @@ class AmphoraePostNetworkPlug(BaseAmphoraTask):
     def execute(self, loadbalancer, added_ports):
         """Execute post_network_plug routine."""
         amp_post_plug = AmphoraPostNetworkPlug()
-        for amphora in loadbalancer.amphorae:
+        for amphora in loadbalancer.all_backend_amphorae:
             if amphora.id in added_ports:
                 amp_post_plug.execute(amphora, added_ports[amphora.id])
 
@@ -212,10 +212,7 @@ class AmphoraePostNetworkPlug(BaseAmphoraTask):
         if isinstance(result, failure.Failure):
             return
         LOG.warning(_LW("Reverting post network plug."))
-        for amphora in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-
+        for amphora in loadbalancer.all_backend_amphorae:
             self.amphora_repo.update(db_apis.get_session(), id=amphora.id,
                                      status=constants.ERROR)
 
@@ -253,17 +250,13 @@ class AmphoraUpdateVRRPInterface(BaseAmphoraTask):
 
     def execute(self, loadbalancer):
         """Execute post_vip_routine."""
-        amps = []
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
-                    # Currently this is supported only with REST Driver
-                    interface = self.amphora_driver.get_vrrp_interface(amp)
-                    self.amphora_repo.update(db_apis.get_session(), amp.id,
-                                             vrrp_interface=interface)
-                    amps.append(self.amphora_repo.get(db_apis.get_session(),
-                                                      id=amp.id))
-        loadbalancer.amphorae = amps
+        for amp in loadbalancer.vrrp_amphorae:
+            # Currently this is supported only with REST Driver
+            interface = self.amphora_driver.get_vrrp_interface(amp)
+            self.amphora_repo.update(db_apis.get_session(), amp.id,
+                                     vrrp_interface=interface)
+            amp.vrrp_interface = interface
+
         return loadbalancer
 
     def revert(self, result, loadbalancer, *args, **kwargs):
@@ -271,9 +264,7 @@ class AmphoraUpdateVRRPInterface(BaseAmphoraTask):
         if isinstance(result, failure.Failure):
             return
         LOG.warning(_LW("Reverting Get Amphora VRRP Interface."))
-        for amp in six.moves.filter(
-            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
-                loadbalancer.amphorae):
+        for amp in loadbalancer.vrrp_amphorae:
 
             self.amphora_repo.update(db_apis.get_session(), amp.id,
                                      vrrp_interface=None)

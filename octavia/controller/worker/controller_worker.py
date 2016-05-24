@@ -254,7 +254,7 @@ class ControllerWorker(base_taskflow.BaseTaskFlowEngine):
         if load_balancer.listeners:
             allocate_amphorae_flow, post_lb_amp_assoc_flow = (
                 self._lb_flows.get_create_load_balancer_graph_flows(
-                    topology, post_amp_prefix
+                    topology, post_amp_prefix, load_balancer
                 )
             )
         else:
@@ -265,7 +265,8 @@ class ControllerWorker(base_taskflow.BaseTaskFlowEngine):
             )
             post_lb_amp_assoc_flow = (
                 self._lb_flows.get_post_lb_amp_association_flow(
-                    prefix=post_amp_prefix, topology=topology
+                    prefix=post_amp_prefix, topology=topology,
+                    load_balancer=load_balancer
                 )
             )
         return allocate_amphorae_flow, post_lb_amp_assoc_flow

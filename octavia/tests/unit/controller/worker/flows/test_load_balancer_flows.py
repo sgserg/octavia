@@ -37,9 +37,14 @@ class TestLoadBalancerFlows(base.TestCase):
         self.addCleanup(cfg.CONF.set_override, 'amphora_driver',
                         old_amp_driver, group='controller_worker')
 
+    def getMockLB(self, topo):
+        lb_mock = mock.Mock()
+        lb_mock.topology = topo
+        return lb_mock
+
     def test_get_create_load_balancer_flow(self):
         amp_flow = self.LBFlow.get_create_load_balancer_flow(
-            constants.TOPOLOGY_SINGLE)
+            self.getMockLB(constants.TOPOLOGY_SINGLE))
         self.assertIsInstance(amp_flow, flow.Flow)
         self.assertIn(constants.LOADBALANCER_ID, amp_flow.requires)
         self.assertIn(constants.AMPHORA, amp_flow.provides)
@@ -49,7 +54,7 @@ class TestLoadBalancerFlows(base.TestCase):
 
     def test_get_create_active_standby_load_balancer_flow(self):
         amp_flow = self.LBFlow.get_create_load_balancer_flow(
-            constants.TOPOLOGY_ACTIVE_STANDBY)
+            self.getMockLB(constants.TOPOLOGY_ACTIVE_STANDBY))
         self.assertIsInstance(amp_flow, flow.Flow)
         self.assertIn(constants.LOADBALANCER_ID, amp_flow.requires)
         self.assertIn(constants.AMPHORA, amp_flow.provides)
@@ -62,7 +67,7 @@ class TestLoadBalancerFlows(base.TestCase):
                               group='nova')
         self._LBFlow = load_balancer_flows.LoadBalancerFlows()
         amp_flow = self._LBFlow.get_create_load_balancer_flow(
-            constants.TOPOLOGY_ACTIVE_STANDBY)
+            self.getMockLB(constants.TOPOLOGY_ACTIVE_STANDBY))
         self.assertIsInstance(amp_flow, flow.Flow)
         self.assertIn(constants.LOADBALANCER_ID, amp_flow.requires)
         self.assertIn(constants.SERVER_GROUP_ID, amp_flow.provides)
@@ -74,7 +79,7 @@ class TestLoadBalancerFlows(base.TestCase):
     def test_get_create_bogus_topology_load_balancer_flow(self):
         self.assertRaises(exceptions.InvalidTopology,
                           self.LBFlow.get_create_load_balancer_flow,
-                          'BOGUS')
+                          self.getMockLB('BOGUS'))
 
     def test_get_delete_load_balancer_flow(self):
         lb_mock = mock.Mock()
@@ -145,8 +150,12 @@ class TestLoadBalancerFlows(base.TestCase):
         self.assertEqual(3, len(lb_flow.requires))
 
     def test_get_post_lb_amp_association_flow(self):
+        lb_mock = mock.Mock()
+        lb_mock.hasVRRP = False
+        lb_mock.topology = constants.TOPOLOGY_SINGLE
+
         amp_flow = self.LBFlow.get_post_lb_amp_association_flow(
-            '123', constants.TOPOLOGY_SINGLE)
+            '123', lb_mock)
 
         self.assertIsInstance(amp_flow, flow.Flow)
 
@@ -158,8 +167,9 @@ class TestLoadBalancerFlows(base.TestCase):
         self.assertEqual(2, len(amp_flow.requires))
 
         # Test Active/Standby path
+        lb_mock.topology = constants.TOPOLOGY_ACTIVE_STANDBY
         amp_flow = self.LBFlow.get_post_lb_amp_association_flow(
-            '123', constants.TOPOLOGY_ACTIVE_STANDBY)
+            '123', lb_mock)
 
         self.assertIsInstance(amp_flow, flow.Flow)
 
@@ -171,8 +181,10 @@ class TestLoadBalancerFlows(base.TestCase):
         self.assertEqual(2, len(amp_flow.requires))
 
         # Test mark_active=False
+        lb_mock.hasVRRP = True
+        lb_mock.topology = constants.TOPOLOGY_ACTIVE_STANDBY
         amp_flow = self.LBFlow.get_post_lb_amp_association_flow(
-            '123', constants.TOPOLOGY_ACTIVE_STANDBY)
+            '123', lb_mock)
 
         self.assertIsInstance(amp_flow, flow.Flow)
 
@@ -184,9 +196,13 @@ class TestLoadBalancerFlows(base.TestCase):
         self.assertEqual(2, len(amp_flow.requires))
 
     def test_get_create_load_balancer_graph_flows(self):
+        lb_mock = mock.Mock()
+        lb_mock.hasVRRP = False
+        lb_mock.topology = constants.TOPOLOGY_SINGLE
+
         allocate_amp_flow, post_amp_flow = (
             self.LBFlow.get_create_load_balancer_graph_flows(
-                constants.TOPOLOGY_SINGLE, '123'
+                lb_mock, '123'
             )
         )
         self.assertIsInstance(allocate_amp_flow, flow.Flow)
@@ -217,9 +233,11 @@ class TestLoadBalancerFlows(base.TestCase):
         self.assertEqual(7, len(post_amp_flow.provides))
 
         # Test Active/Standby
+        lb_mock.hasVRRP = True
+        lb_mock.toplogy = constants.TOPOLOGY_ACTIVE_STANDBY
         allocate_amp_flow, post_amp_flow = (
             self.LBFlow.get_create_load_balancer_graph_flows(
-                constants.TOPOLOGY_ACTIVE_STANDBY, '123'
+                lb_mock, '123'
             )
         )
         self.assertIsInstance(allocate_amp_flow, flow.Flow)

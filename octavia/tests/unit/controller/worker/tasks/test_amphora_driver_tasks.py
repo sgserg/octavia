@@ -272,7 +272,7 @@ class TestAmphoraDriverTasks(base.TestCase):
         mock_driver.get_network.return_value = _network_mock
         _amphora_mock.id = AMP_ID
         _amphora_mock.compute_id = COMPUTE_ID
-        _LB_mock.amphorae = [_amphora_mock]
+        _LB_mock.all_backend_amphorae = [_amphora_mock]
         amphora_post_network_plug_obj = (amphora_driver_tasks.
                                          AmphoraePostNetworkPlug())
 
@@ -344,7 +344,7 @@ class TestAmphoraDriverTasks(base.TestCase):
                                            mock_listener_repo_get,
                                            mock_listener_repo_update,
                                            mock_amphora_repo_update):
-        _LB_mock.amphorae = _amphorae_mock
+        _LB_mock.vrrp_amphorae = _amphorae_mock
         amphora_update_vrrp_interface_obj = (
             amphora_driver_tasks.AmphoraUpdateVRRPInterface())
         amphora_update_vrrp_interface_obj.execute(_LB_mock)

@@ -168,7 +168,8 @@ class JinjaTemplater(object):
             'protocol': listener.protocol,
             'peer_port': listener.peer_port,
             'topology': listener.load_balancer.topology,
-            'amphorae': listener.load_balancer.amphorae,
+            'amphorae': listener.load_balancer.backend_amphorae,
+            'has_peers': listener.load_balancer.hasPeers,
             'enabled': listener.enabled
         }
         if listener.connection_limit and listener.connection_limit > -1:

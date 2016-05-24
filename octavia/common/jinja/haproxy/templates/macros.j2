@@ -14,7 +14,7 @@
 #
 #}
 {% macro peers_macro(constants,listener) %}
-    {% if listener.topology == constants.TOPOLOGY_ACTIVE_STANDBY %}
+    {% if listener.has_peers %}
 peers {{ "%s_peers"|format(listener.id.replace("-", ""))|trim() }}
         {% for amp in listener.amphorae if (
             amp.status == constants.AMPHORA_ALLOCATED) %}

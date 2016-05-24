@@ -491,7 +491,7 @@ class TestControllerWorker(base.TestCase):
         mock_eng.run.assert_any_call()
         mock_eng_post.run.assert_any_call()
         mock_get_create_load_balancer_graph_flows.assert_called_once_with(
-            'SINGLE', 'post-amphora-association'
+            'SINGLE', 'post-amphora-association', lb
         )
         self.assertFalse(mock_get_create_load_balancer_flow.called)
         self.assertFalse(mock_get_post_lb_amp_association_flow.called)
@@ -522,7 +522,7 @@ class TestControllerWorker(base.TestCase):
         mock_eng.run.assert_any_call()
         mock_eng_post.run.assert_any_call()
         mock_get_create_load_balancer_graph_flows.assert_called_once_with(
-            'ACTIVE_STANDBY', 'post-amphora-association'
+            'ACTIVE_STANDBY', 'post-amphora-association', lb
         )
         self.assertFalse(mock_get_create_load_balancer_flow.called)
         self.assertFalse(mock_get_post_lb_amp_association_flow.called)

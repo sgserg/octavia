@@ -30,7 +30,7 @@ class TestVRRPRestDriver(base.TestCase):
         self.lb_mock = mock.MagicMock()
         self.amphora_mock = mock.MagicMock()
         self.amphora_mock.status = constants.AMPHORA_ALLOCATED
-        self.lb_mock.amphorae = [self.amphora_mock]
+        self.lb_mock.vrrp_amphorae = [self.amphora_mock]
         super(TestVRRPRestDriver, self).setUp()
 
     @mock.patch('octavia.amphorae.drivers.keepalived.jinja.'

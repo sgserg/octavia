@@ -15,6 +15,7 @@
 #    under the License.
 
 import re
+import six
 
 from sqlalchemy.orm import collections
 
@@ -336,6 +337,47 @@ class LoadBalancer(BaseDataModel):
         self.amphorae = amphorae or []
         self.pools = pools or []
         self.server_group_id = server_group_id
+
+    # any amphora requiring connection to members' networks
+    @property
+    def all_backend_amphorae(self):
+        return self.amphorae
+
+    # any amphora requiring connection to VIP network
+    @property
+    def all_frontend_amphorae(self):
+        return self.amphorae
+
+    # allocated amphora requiring connection to members' networks
+    @property
+    def backend_amphorae(self):
+        return six.moves.filter(
+            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
+                self.amphorae)
+
+    # allocated amphora requiring connection to VIP network
+    @property
+    def frontend_amphorae(self):
+        return six.moves.filter(
+            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
+                self.amphorae)
+
+    # allocated amphorae participating in the LB VRRP group
+    @property
+    def vrrp_amphorae(self):
+        return six.moves.filter(
+            lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
+                self.amphorae)
+
+    # true only for LBs requiring VRRP
+    @property
+    def hasVRRP(self):
+        return self.topology == constants.TOPOLOGY_ACTIVE_STANDBY
+
+    # true only for LBs with haproxy employing "peers" configuration
+    @property
+    def hasPeers(self):
+        return self.topology == constants.TOPOLOGY_ACTIVE_STANDBY
 
 
 class VRRPGroup(BaseDataModel):
